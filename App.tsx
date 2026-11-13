@@ -1,41 +1,51 @@
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
-export default function App() {
+import { useTheme } from './src/theme/theme';
+import TabBar, { TabKey } from './src/navigation/TabBar';
+import HomeScreen from './src/screens/HomeScreen';
+import LibraryScreen from './src/screens/LibraryScreen';
+import CreatorScreen from './src/screens/CreatorScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
+
+function Shell() {
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  const [tab, setTab] = useState<TabKey>('home');
+
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Hello, Personal Widget</Text>
-        <Text style={styles.subtitle}>Phase 1 setup complete</Text>
+    <View
+      style={[
+        styles.root,
+        { backgroundColor: t.background, paddingTop: insets.top },
+      ]}
+    >
+      <View style={styles.content}>
+        {tab === 'home' && <HomeScreen />}
+        {tab === 'library' && <LibraryScreen />}
+        {tab === 'creator' && <CreatorScreen />}
+        {tab === 'settings' && <SettingsScreen />}
       </View>
-      <StatusBar style="light" />
+      <TabBar active={tab} onChange={setTab} />
+      <StatusBar style={t.dark ? 'light' : 'dark'} />
     </View>
   );
 }
 
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <Shell />
+    </SafeAreaProvider>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000000',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  card: {
-    backgroundColor: '#1A1B1F',
-    borderRadius: 28,
-    paddingVertical: 32,
-    paddingHorizontal: 28,
-    alignItems: 'center',
-  },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 26,
-    fontWeight: '700',
-  },
-  subtitle: {
-    color: '#9A9BA3',
-    fontSize: 15,
-    marginTop: 8,
-  },
+  root: { flex: 1 },
+  content: { flex: 1 },
 });
