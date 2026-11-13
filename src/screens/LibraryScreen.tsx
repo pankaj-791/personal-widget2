@@ -7,6 +7,10 @@ import ClockWidget, {
   WidgetSize,
   defaultClockConfig,
 } from '../widgets/ClockWidget';
+import CalendarWidget, {
+  CalendarConfig,
+  defaultCalendarConfig,
+} from '../widgets/CalendarWidget';
 
 const STYLES: { key: ClockStyle; label: string }[] = [
   { key: 'bold', label: 'Bold' },
@@ -20,11 +24,38 @@ const SIZES: { key: WidgetSize; label: string }[] = [
   { key: 'large', label: 'Large' },
 ];
 
-const COLORS: { text: string; bg: string }[] = [
+const CLOCK_COLORS: { text: string; bg: string }[] = [
   { text: '#FFFFFF', bg: '#000000' },
   { text: '#000000', bg: '#FFFFFF' },
   { text: '#7C9CFF', bg: '#F5A623' },
   { text: '#FFD60A', bg: '#1A1B1F' },
+];
+
+const CALENDAR_COLORS: CalendarConfig[] = [
+  {
+    textColor: '#FFFFFF',
+    backgroundColor: '#000000',
+    todayBackground: '#FFFFFF',
+    todayText: '#000000',
+  },
+  {
+    textColor: '#000000',
+    backgroundColor: '#FFFFFF',
+    todayBackground: '#000000',
+    todayText: '#FFFFFF',
+  },
+  {
+    textColor: '#FFFFFF',
+    backgroundColor: '#1F3A8A',
+    todayBackground: '#FFD60A',
+    todayText: '#000000',
+  },
+  {
+    textColor: '#FFFFFF',
+    backgroundColor: '#14532D',
+    todayBackground: '#FFFFFF',
+    todayText: '#14532D',
+  },
 ];
 
 type ChipProps = {
@@ -62,6 +93,9 @@ export default function LibraryScreen() {
   const t = useTheme();
   const [config, setConfig] = useState<ClockConfig>(defaultClockConfig);
   const [size, setSize] = useState<WidgetSize>('medium');
+  const [calendar, setCalendar] = useState<CalendarConfig>(
+    defaultCalendarConfig
+  );
 
   const update = (patch: Partial<ClockConfig>) =>
     setConfig((c) => ({ ...c, ...patch }));
@@ -142,7 +176,7 @@ export default function LibraryScreen() {
 
         <Text style={[styles.label, { color: t.textMuted }]}>Color</Text>
         <View style={styles.row}>
-          {COLORS.map((c) => {
+          {CLOCK_COLORS.map((c) => {
             const active =
               config.textColor === c.text && config.backgroundColor === c.bg;
             return (
@@ -166,40 +200,43 @@ export default function LibraryScreen() {
           })}
         </View>
       </View>
-    </ScrollView>
-  );
-}
 
-const styles = StyleSheet.create({
-  content: { padding: spacing.lg, paddingBottom: spacing.xl },
-  title: { fontSize: 34, fontWeight: '700', marginBottom: spacing.lg },
-  card: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    padding: spacing.lg,
-  },
-  cardTitle: { fontSize: 18, fontWeight: '600' },
-  cardSub: { fontSize: 14, marginTop: spacing.xs },
-  preview: { marginVertical: spacing.md },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  chipText: { fontSize: 14, fontWeight: '600' },
-  swatch: {
-    width: 52,
-    height: 40,
-    borderRadius: radius.small,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+      <View
+        style={[
+          styles.card,
+          styles.cardGap,
+          { backgroundColor: t.card, borderColor: t.cardBorder },
+        ]}
+      >
+        <Text style={[styles.cardTitle, { color: t.text }]}>Calendar</Text>
+        <Text style={[styles.cardSub, { color: t.textMuted }]}>
+          Use the arrows to change month. Tap the title to return to today.
+        </Text>
+
+        <View style={styles.preview}>
+          <CalendarWidget config={calendar} />
+        </View>
+
+        <Text style={[styles.label, { color: t.textMuted }]}>Color</Text>
+        <View style={styles.row}>
+          {CALENDAR_COLORS.map((c) => {
+            const active =
+              calendar.backgroundColor === c.backgroundColor &&
+              calendar.todayBackground === c.todayBackground;
+            return (
+              <Pressable
+                key={c.backgroundColor + c.todayBackground}
+                onPress={() => setCalendar(c)}
+                style={[
+                  styles.swatch,
+                  {
+                    backgroundColor: c.backgroundColor,
+                    borderColor: active ? t.accent : t.cardBorder,
+                    borderWidth: active ? 3 : 1,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.todayDot,
+                    { backgroun
