@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Personal Widget",
+    "slug": "personal-widget",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.personalwidget.app"
+    }
+  }
+}
