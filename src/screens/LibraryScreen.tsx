@@ -239,4 +239,50 @@ export default function LibraryScreen() {
                 <View
                   style={[
                     styles.todayDot,
-                    { backgroun
+                    { backgroundColor: c.todayBackground },
+                  ]}
+                />
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: { padding: spacing.lg, paddingBottom: spacing.xl },
+  title: { fontSize: 34, fontWeight: '700', marginBottom: spacing.lg },
+  card: {
+    borderRadius: radius.card,
+    borderWidth: 1,
+    padding: spacing.lg,
+  },
+  cardGap: { marginTop: spacing.lg },
+  cardTitle: { fontSize: 18, fontWeight: '600' },
+  cardSub: { fontSize: 14, marginTop: spacing.xs },
+  preview: { marginVertical: spacing.md },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chip: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  chipText: { fontSize: 14, fontWeight: '600' },
+  swatch: {
+    width: 52,
+    height: 40,
+    borderRadius: radius.small,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  todayDot: { width: 24, height: 14, borderRadius: radius.pill },
+});
