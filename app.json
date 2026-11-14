@@ -43,6 +43,26 @@
               "targetCellWidth": 4,
               "targetCellHeight": 4,
               "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "PwDate",
+              "label": "Date",
+              "description": "Day, date and month at a glance",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "PwTicTacToe",
+              "label": "Tic-Tac-Toe",
+              "description": "Play against the computer on your home screen",
+              "minWidth": "180dp",
+              "minHeight": "210dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 3,
+              "updatePeriodMillis": 1800000
             }
           ]
         }
