@@ -7,7 +7,7 @@ export type TabKey = 'home' | 'library' | 'creator' | 'settings';
 export const TABS: { key: TabKey; label: string; icon: string }[] = [
   { key: 'home', label: 'Home', icon: '⌂' },
   { key: 'library', label: 'Library', icon: '▦' },
-  { key: 'creator', label: 'AI Creator', icon: '✦' },
+  { key: 'creator', label: 'Creator', icon: '✦' },
   { key: 'settings', label: 'Settings', icon: '⚙' },
 ];
 
