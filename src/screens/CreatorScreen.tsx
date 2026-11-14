@@ -11,6 +11,8 @@ import { radius, spacing, useTheme } from '../theme/theme';
 import { deleteStoredImage } from '../native/pickImage';
 import CustomWidgetView from '../creator/CustomWidgetView';
 import CustomizePanel from '../creator/CustomizePanel';
+import StylePanel from '../creator/StylePanel';
+import { getExtra } from '../creator/extraStyle';
 import { saveWidget } from '../creator/widgetStore';
 import {
   CustomWidgetSpec,
