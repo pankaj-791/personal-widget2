@@ -65,7 +65,7 @@ export default function CreatorScreen() {
       keyboardShouldPersistTaps="handled"
       stickyHeaderIndices={[2]}
     >
-      <Text style={[styles.title, { color: t.text }]}>AI Widget Creator</Text>
+      <Text style={[styles.title, { color: t.text }]}>Widget Creator</Text>
 
       <View
         style={[
