@@ -1,3 +1,4 @@
+import { ExtraStyle } from './extraStyle';
 export type FontKey = 'sans' | 'light' | 'condensed' | 'serif' | 'mono';
 export type WidgetKind = 'clock' | 'date' | 'text';
 export type FontWeight = '300' | '400' | '700' | '800';
@@ -20,6 +21,7 @@ export type CustomWidgetSpec = {
   hour12: boolean;
   showDate: boolean;
   imageUri: string | null;
+    extra?: Partial<ExtraStyle>;
 };
 
 export const FONTS: { key: FontKey; label: string; family: string }[] = [
