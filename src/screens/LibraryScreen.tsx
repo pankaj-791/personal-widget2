@@ -8,6 +8,7 @@ import ClockWidget, {
   defaultClockConfig,
 } from '../widgets/ClockWidget';
 import GamesSection from '../games/GamesSection';
+import ToolsSection from '../tools/ToolsSection';
 import MyWidgetsSection from '../creator/MyWidgetsSection';
 import CalendarWidget, {
   CalendarConfig,
@@ -253,6 +254,8 @@ export default function LibraryScreen() {
       </View>  
       <View style={{ height: spacing.lg }} />
       <GamesSection />
+            <View style={{ height: spacing.lg }} />
+      <ToolsSection />
     </ScrollView>
   );
 }
