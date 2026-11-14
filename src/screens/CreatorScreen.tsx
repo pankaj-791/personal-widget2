@@ -107,11 +107,20 @@ export default function CreatorScreen() {
         )}
       </View>
 
-      <View style={[styles.previewWrap, { backgroundColor: t.background }]}>
+            <View style={[styles.previewWrap, { backgroundColor: t.background }]}>
+        {getExtra(spec).glass && (
+          <View style={styles.backdrop} pointerEvents="none">
+            <View style={[styles.blob, styles.blobA]} />
+            <View style={[styles.blob, styles.blobB]} />
+            <View style={[styles.blob, styles.blobC]} />
+          </View>
+        )}
         <CustomWidgetView spec={spec} />
       </View>
 
       <CustomizePanel spec={spec} onUpdate={update} />
+            <View style={{ height: spacing.lg }} />
+      <StylePanel spec={spec} onUpdate={update} />
 
       <Pressable
         onPress={save}
@@ -141,6 +150,29 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 18, fontWeight: '600' },
   cardSub: { fontSize: 14, marginTop: spacing.xs },
   previewWrap: { paddingVertical: spacing.md },
+    backdrop: { ...StyleSheet.absoluteFillObject, overflow: 'hidden' },
+  blob: { position: 'absolute', borderRadius: 999 },
+  blobA: {
+    width: 140,
+    height: 140,
+    left: 10,
+    top: -20,
+    backgroundColor: '#FF5A5F',
+  },
+  blobB: {
+    width: 160,
+    height: 160,
+    right: 0,
+    top: 30,
+    backgroundColor: '#3B82F6',
+  },
+  blobC: {
+    width: 120,
+    height: 120,
+    left: '40%',
+    bottom: -30,
+    backgroundColor: '#FFD60A',
+  },
   input: {
     borderWidth: 1,
     borderRadius: radius.small,
