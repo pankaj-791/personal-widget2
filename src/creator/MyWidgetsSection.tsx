@@ -1,192 +1,139 @@
 import { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { CustomWidgetSpec, fontFamily } from './widgetSpec';
-import { getExtra, withAlpha } from './extraStyle';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { radius, spacing, useTheme } from '../theme/theme';
+import ErrorBoundary from '../components/ErrorBoundary';
+import CustomWidgetView from './CustomWidgetView';
+import { deleteWidget, loadWidgets } from './widgetStore';
+import { CustomWidgetSpec } from './widgetSpec';
 
-const DAYS = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-];
-const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-function pad(n: number): string {
-  return n < 10 ? `0${n}` : `${n}`;
+function isValid(w: unknown): w is CustomWidgetSpec {
+  if (w === null || typeof w !== 'object') return false;
+  const x = w as Partial<CustomWidgetSpec>;
+  return (
+    typeof x.id === 'string' &&
+    typeof x.kind === 'string' &&
+    typeof x.height === 'number' &&
+    typeof x.padding === 'number'
+  );
 }
 
-type Props = {
-  spec: CustomWidgetSpec;
-};
-
-export default function CustomWidgetView({ spec }: Props) {
-  const [now, setNow] = useState(new Date());
-  const extra = getExtra(spec);
+export default function MyWidgetsSection() {
+  const t = useTheme();
+  const [widgets, setWidgets] = useState<CustomWidgetSpec[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
-    const ms = spec.kind === 'clock' ? 1000 : 60000;
-    const id = setInterval(() => setNow(new Date()), ms);
-    return () => clearInterval(id);
-  }, [spec.kind]);
+    let active = true;
+    loadWidgets().then((list) => {
+      if (active) {
+        setWidgets(list.filter(isValid));
+        setLoaded(true);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const hours24 = now.getHours();
-  const hours = spec.hour12 ? hours24 % 12 || 12 : hours24;
-  const hourText = spec.hour12 ? `${hours}` : pad(hours);
-  const timeText = `${hourText}:${pad(now.getMinutes())}${
-    spec.hour12 ? (hours24 >= 12 ? ' PM' : ' AM') : ''
-  }`;
-  const dateText = `${DAYS[now.getDay()]}, ${now.getDate()} ${
-    MONTHS[now.getMonth()]
-  }`;
-
-  const inner = spec.height - spec.padding * 2;
-  const mainFont = Math.max(
-    Math.min(inner * (spec.kind === 'clock' ? 0.5 : 0.4), 96),
-    16
-  );
-  const smallFont = Math.max(mainFont * 0.3, 12);
-  const iconFont = Math.max(Math.min(inner * 0.28, 40), 18);
-
-  const main =
-    spec.kind === 'clock'
-      ? timeText
-      : spec.kind === 'date'
-      ? dateText
-      : spec.text;
-
-  const fill = extra.glass
-    ? withAlpha(spec.backgroundColor, extra.glassStrength)
-    : withAlpha(spec.backgroundColor, extra.opacity);
-
-  const edgeWidth = extra.glass ? Math.max(extra.borderWidth, 1) : extra.borderWidth;
-  const edgeColor =
-    extra.glass && extra.borderWidth === 0
-      ? 'rgba(255, 255, 255, 0.40)'
-      : extra.borderColor;
-
-  const flexAlign =
-    extra.align === 'left'
-      ? 'flex-start'
-      : extra.align === 'right'
-      ? 'flex-end'
-      : 'center';
-
-  const textStyle = {
-    color: spec.textColor,
-    fontFamily: fontFamily(spec.font),
-    fontWeight: spec.weight,
-    letterSpacing: extra.letterSpacing,
-    textAlign: extra.align,
-    ...(extra.textShadow
-      ? {
-          textShadowColor: 'rgba(0, 0, 0, 0.45)',
-          textShadowOffset: { width: 0, height: 2 },
-          textShadowRadius: 6,
-        }
-      : {}),
-  } as const;
+  const remove = async (id: string) => {
+    await deleteWidget(id);
+    setWidgets((list) => list.filter((w) => w.id !== id));
+    setConfirmId(null);
+  };
 
   return (
     <View
       style={[
-        styles.outer,
-        {
-          width: `${spec.widthPct}%`,
-          height: spec.height,
-          borderRadius: spec.borderRadius,
-          ...(extra.shadow
-            ? { boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.4)' }
-            : {}),
-        },
+        styles.section,
+        { backgroundColor: t.card, borderColor: t.cardBorder },
       ]}
     >
-      <View
-        style={[
-          styles.inner,
-          {
-            borderRadius: spec.borderRadius,
-            padding: spec.padding,
-            backgroundColor: fill,
-            borderWidth: edgeWidth,
-            borderColor: edgeColor,
-            alignItems: flexAlign,
-          },
-        ]}
-      >
-        {spec.imageUri && (
-          <>
-            <Image
-              source={{ uri: spec.imageUri }}
-              style={StyleSheet.absoluteFill}
-              resizeMode="cover"
-            />
-            <View style={[StyleSheet.absoluteFill, styles.dim]} />
-          </>
-        )}
+      <Text style={[styles.title, { color: t.text }]}>My Widgets</Text>
+      <Text style={[styles.sub, { color: t.textMuted }]}>
+        Widgets you created in the Creator tab.
+      </Text>
 
-        {extra.glass && <View style={styles.highlight} />}
-
-        {spec.icon !== '' && (
-          <Text style={{ fontSize: iconFont, marginBottom: 2 }}>
-            {spec.icon}
-          </Text>
-        )}
-
-        <Text
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          style={[styles.main, textStyle, { fontSize: mainFont }]}
-        >
-          {main}
+      {loaded && widgets.length === 0 && (
+        <Text style={[styles.empty, { color: t.textMuted }]}>
+          Nothing here yet. Open the Creator tab, build a widget and tap Save
+          to Library.
         </Text>
+      )}
 
-        {spec.kind === 'clock' && spec.showDate && (
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            style={[styles.small, textStyle, { fontSize: smallFont }]}
-          >
-            {dateText}
-          </Text>
-        )}
-      </View>
+      {widgets.map((w) => (
+        <View key={w.id} style={styles.item}>
+          <ErrorBoundary name={w.name ?? 'Widget'}>
+            <CustomWidgetView spec={w} />
+          </ErrorBoundary>
+          <View style={styles.itemFooter}>
+            <Text
+              numberOfLines={1}
+              style={[styles.itemName, { color: t.text }]}
+            >
+              {w.name}
+            </Text>
+            {confirmId === w.id ? (
+              <View style={styles.confirmRow}>
+                <Pressable
+                  onPress={() => setConfirmId(null)}
+                  style={[styles.smallButton, { borderColor: t.cardBorder }]}
+                >
+                  <Text style={[styles.smallText, { color: t.text }]}>
+                    Cancel
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => remove(w.id)}
+                  style={[styles.smallButton, styles.danger]}
+                >
+                  <Text style={[styles.smallText, styles.dangerText]}>
+                    Delete
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => setConfirmId(w.id)}
+                style={[styles.smallButton, { borderColor: t.cardBorder }]}
+              >
+                <Text style={[styles.smallText, { color: t.text }]}>
+                  Delete
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  outer: { alignSelf: 'center' },
-  inner: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    overflow: 'hidden',
+  section: {
+    borderRadius: radius.card,
+    borderWidth: 1,
+    padding: spacing.lg,
   },
-  dim: { backgroundColor: 'rgba(0, 0, 0, 0.35)' },
-  highlight: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '50%',
-    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+  title: { fontSize: 18, fontWeight: '600' },
+  sub: { fontSize: 14, marginTop: spacing.xs },
+  empty: { fontSize: 14, marginTop: spacing.md },
+  item: { marginTop: spacing.md },
+  itemFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
   },
-  main: { maxWidth: '100%', includeFontPadding: false },
-  small: { maxWidth: '100%', opacity: 0.75, marginTop: 4 },
+  itemName: { flex: 1, fontSize: 15, fontWeight: '600', marginRight: 8 },
+  confirmRow: { flexDirection: 'row', gap: 6 },
+  smallButton: {
+    borderWidth: 1,
+    borderRadius: radius.pill,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+  },
+  smallText: { fontSize: 13, fontWeight: '600' },
+  danger: { backgroundColor: '#E5484D', borderColor: '#E5484D' },
+  dangerText: { color: '#FFFFFF' },
 });
