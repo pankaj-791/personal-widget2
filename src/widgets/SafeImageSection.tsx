@@ -1,57 +1,56 @@
-import { Component, ComponentType, ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, useTheme } from '../theme/theme';
 
-type BoundaryProps = { children: ReactNode; onError: (msg: string) => void };
-type BoundaryState = { failed: boolean };
+type Test = { key: string; label: string; run: () => string };
 
-class Boundary extends Component<BoundaryProps, BoundaryState> {
-  state: BoundaryState = { failed: false };
-
-  static getDerivedStateFromError(): BoundaryState {
-    return { failed: true };
-  }
-
-  componentDidCatch(error: unknown) {
-    this.props.onError(
-      error instanceof Error ? error.message : String(error)
-    );
-  }
-
-  render() {
-    return this.state.failed ? null : this.props.children;
-  }
-}
+const TESTS: Test[] = [
+  {
+    key: 'fs',
+    label: '1. Test file storage',
+    run: () => {
+      const m = require('expo-file-system/legacy');
+      return typeof m.copyAsync === 'function'
+        ? 'OK: file storage loaded'
+        : 'Loaded, but copyAsync is missing';
+    },
+  },
+  {
+    key: 'picker',
+    label: '2. Test image picker',
+    run: () => {
+      const m = require('expo-image-picker');
+      return typeof m.launchImageLibraryAsync === 'function'
+        ? 'OK: image picker loaded'
+        : 'Loaded, but launchImageLibraryAsync is missing';
+    },
+  },
+  {
+    key: 'skia',
+    label: '3. Test Skia',
+    run: () => {
+      const m = require('@shopify/react-native-skia');
+      return m.Canvas
+        ? 'OK: Skia loaded'
+        : 'Loaded, but Canvas is missing';
+    },
+  },
+];
 
 export default function SafeImageSection() {
   const t = useTheme();
-  const [Section, setSection] = useState<ComponentType | null>(null);
-  const [error, setError] = useState('');
+  const [results, setResults] = useState<Record<string, string>>({});
 
-  const load = () => {
-    setError('');
+  const runTest = (test: Test) => {
+    setResults((r) => ({ ...r, [test.key]: 'Testing...' }));
     try {
-      const mod = require('./ImageSection');
-      setSection(() => mod.default as ComponentType);
+      const outcome = test.run();
+      setResults((r) => ({ ...r, [test.key]: outcome }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      const msg = e instanceof Error ? e.message : String(e);
+      setResults((r) => ({ ...r, [test.key]: `FAILED: ${msg}` }));
     }
   };
-
-  if (Section) {
-    return (
-      <View>
-        <Boundary onError={setError}>
-          <Section />
-        </Boundary>
-        {error !== '' && (
-          <Text style={[styles.error, { color: t.text }]}>
-            Photo tools failed: {error}
-          </Text>
-        )}
-      </View>
-    );
-  }
 
   return (
     <View
@@ -60,23 +59,28 @@ export default function SafeImageSection() {
         { backgroundColor: t.card, borderColor: t.cardBorder },
       ]}
     >
-      <Text style={[styles.title, { color: t.text }]}>Photo</Text>
+      <Text style={[styles.title, { color: t.text }]}>Library test</Text>
       <Text style={[styles.sub, { color: t.textMuted }]}>
-        Photo tools load on demand.
+        Tap the tests in order. If the app closes, tell me which number you
+        tapped.
       </Text>
-      <Pressable
-        onPress={load}
-        style={[styles.button, { backgroundColor: t.accent }]}
-      >
-        <Text style={[styles.buttonText, { color: t.accentText }]}>
-          Load photo tools
-        </Text>
-      </Pressable>
-      {error !== '' && (
-        <Text style={[styles.error, { color: t.text }]}>
-          Photo tools failed: {error}
-        </Text>
-      )}
+      {TESTS.map((test) => (
+        <View key={test.key} style={styles.block}>
+          <Pressable
+            onPress={() => runTest(test)}
+            style={[styles.button, { backgroundColor: t.accent }]}
+          >
+            <Text style={[styles.buttonText, { color: t.accentText }]}>
+              {test.label}
+            </Text>
+          </Pressable>
+          {results[test.key] !== undefined && (
+            <Text style={[styles.result, { color: t.text }]}>
+              {results[test.key]}
+            </Text>
+          )}
+        </View>
+      ))}
     </View>
   );
 }
@@ -89,12 +93,12 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 18, fontWeight: '600' },
   sub: { fontSize: 14, marginTop: spacing.xs },
+  block: { marginTop: spacing.md },
   button: {
     borderRadius: radius.pill,
     paddingVertical: 12,
     alignItems: 'center',
-    marginTop: spacing.md,
   },
   buttonText: { fontSize: 15, fontWeight: '700' },
-  error: { fontSize: 13, marginTop: spacing.md },
+  result: { fontSize: 13, marginTop: spacing.sm },
 });
