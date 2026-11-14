@@ -1,17 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  Image,
   LayoutChangeEvent,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import {
-  Canvas,
-  ColorMatrix,
-  Image as SkiaImage,
-  useImage,
-} from '@shopify/react-native-skia';
+import { applyFilter } from '../native/ImageFilter';
 import {
   Adjustments,
   FilterName,
@@ -51,7 +47,42 @@ export default function ImageWidget({
   onPress,
 }: Props) {
   const [width, setWidth] = useState(300);
-  const image = useImage(uri);
+  const [shownUri, setShownUri] = useState<string | null>(uri);
+  const [working, setWorking] = useState(false);
+
+  const { brightness, contrast, saturation } = adjustments;
+
+  useEffect(() => {
+    if (!uri) {
+      setShownUri(null);
+      return;
+    }
+    const untouched =
+      filter === 'original' &&
+      brightness === defaultAdjustments.brightness &&
+      contrast === defaultAdjustments.contrast &&
+      saturation === defaultAdjustments.saturation;
+    if (untouched) {
+      setShownUri(uri);
+      setWorking(false);
+      return;
+    }
+
+    let cancelled = false;
+    setWorking(true);
+    const timer = setTimeout(async () => {
+      const matrix = buildMatrix(filter, { brightness, contrast, saturation });
+      const result = await applyFilter(uri, matrix);
+      if (cancelled) return;
+      setShownUri(result ?? uri);
+      setWorking(false);
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [uri, filter, brightness, contrast, saturation]);
 
   const onLayout = (e: LayoutChangeEvent) => {
     setWidth(e.nativeEvent.layout.width);
@@ -59,35 +90,29 @@ export default function ImageWidget({
 
   const height = width / ASPECT[shape];
   const borderRadius = shape === 'circle' ? height / 2 : 28;
-  const boxWidth = shape === 'circle' || shape === 'tall' ? height * ASPECT[shape] : width;
+  const boxWidth =
+    shape === 'circle' || shape === 'tall' ? height * ASPECT[shape] : width;
 
   return (
     <View onLayout={onLayout} style={styles.wrapper}>
       <Pressable
         onPress={onPress}
-        style={[
-          styles.box,
-          { width: boxWidth, height, borderRadius },
-        ]}
+        style={[styles.box, { width: boxWidth, height, borderRadius }]}
       >
-        {uri && image ? (
-          <Canvas style={{ width: boxWidth, height }}>
-            <SkiaImage
-              image={image}
-              x={0}
-              y={0}
-              width={boxWidth}
-              height={height}
-              fit="cover"
-            >
-              <ColorMatrix matrix={buildMatrix(filter, adjustments)} />
-            </SkiaImage>
-          </Canvas>
+        {shownUri ? (
+          <Image
+            source={{ uri: shownUri }}
+            style={{ width: boxWidth, height }}
+            resizeMode="cover"
+          />
         ) : (
           <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>
-              {uri ? 'Loading...' : 'Tap to choose a photo'}
-            </Text>
+            <Text style={styles.placeholderText}>Tap to choose a photo</Text>
+          </View>
+        )}
+        {working && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>Updating...</Text>
           </View>
         )}
       </Pressable>
@@ -110,4 +135,14 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   placeholderText: { color: '#9A9BA3', fontSize: 14, textAlign: 'center' },
+  badge: {
+    position: 'absolute',
+    bottom: 10,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  badgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '600' },
 });
