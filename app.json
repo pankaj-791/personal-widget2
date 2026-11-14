@@ -33,6 +33,16 @@
               "targetCellWidth": 4,
               "targetCellHeight": 2,
               "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "PwCalendar",
+              "label": "Calendar",
+              "description": "Monthly calendar with today highlighted",
+              "minWidth": "250dp",
+              "minHeight": "250dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 4,
+              "updatePeriodMillis": 1800000
             }
           ]
         }
