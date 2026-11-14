@@ -23,6 +23,16 @@
               "targetCellWidth": 3,
               "targetCellHeight": 2,
               "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "PwQuickLaunch",
+              "label": "Quick Launch",
+              "description": "Open your favorite apps with one tap",
+              "minWidth": "250dp",
+              "minHeight": "70dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 1,
+              "updatePeriodMillis": 1800000
             }
           ]
         }
