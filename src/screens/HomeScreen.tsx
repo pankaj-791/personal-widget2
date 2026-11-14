@@ -3,6 +3,7 @@ import { spacing, useTheme } from '../theme/theme';
 import PersonalCardSection from '../widgets/PersonalCardSection';
 import QuickLaunchSection from '../widgets/QuickLaunchSection';
 import ImageSection from '../widgets/ImageSection';
+import PictureLauncherSection from '../widgets/PictureLauncherSection';
 
 export default function HomeScreen() {
   const t = useTheme();
@@ -18,6 +19,8 @@ export default function HomeScreen() {
       <QuickLaunchSection />
       <View style={styles.gap} />
       <ImageSection />
+      <View style={styles.gap} />
+      <PictureLauncherSection />
     </ScrollView>
   );
 }
