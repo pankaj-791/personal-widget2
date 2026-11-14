@@ -2,7 +2,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { spacing, useTheme } from '../theme/theme';
 import PersonalCardSection from '../widgets/PersonalCardSection';
 import QuickLaunchSection from '../widgets/QuickLaunchSection';
-import SafeImageSection from '../widgets/SafeImageSection';
+import ImageSection from '../widgets/ImageSection';
 
 export default function HomeScreen() {
   const t = useTheme();
@@ -17,7 +17,7 @@ export default function HomeScreen() {
       <View style={styles.gap} />
       <QuickLaunchSection />
       <View style={styles.gap} />
-      <SafeImageSection />
+      <ImageSection />
     </ScrollView>
   );
 }
