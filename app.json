@@ -8,6 +8,25 @@
     "newArchEnabled": true,
     "android": {
       "package": "com.personalwidget.app"
-    }
+    },
+    "plugins": [
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "PwHello",
+              "label": "Personal Widget Test",
+              "description": "A simple test widget",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ]
+    ]
   }
 }
