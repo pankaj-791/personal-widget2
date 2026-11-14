@@ -6,7 +6,7 @@ import ClockWidget, {
   ClockStyle,
   WidgetSize,
   defaultClockConfig,
-} from '../widgets/ClockWidget';
+} from '../widgets/ClockWidget';import GamesSection from '../games/GamesSection';
 import CalendarWidget, {
   CalendarConfig,
   defaultCalendarConfig,
@@ -246,7 +246,9 @@ export default function LibraryScreen() {
             );
           })}
         </View>
-      </View>
+      </View>  
+      <View style={{ height: spacing.lg }} />
+      <GamesSection />
     </ScrollView>
   );
 }
