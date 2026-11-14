@@ -15,16 +15,6 @@
         {
           "widgets": [
             {
-              "name": "PwHello",
-              "label": "Personal Widget Test",
-              "description": "A simple test widget",
-              "minWidth": "180dp",
-              "minHeight": "110dp",
-              "targetCellWidth": 3,
-              "targetCellHeight": 2,
-              "updatePeriodMillis": 1800000
-            },
-            {
               "name": "PwQuickLaunch",
               "label": "Quick Launch",
               "description": "Open your favorite apps with one tap",
@@ -33,10 +23,9 @@
               "targetCellWidth": 4,
               "targetCellHeight": 1,
               "updatePeriodMillis": 1800000
-            }
-          ]
-        }
-      ]
-    ]
-  }
-}
+            },
+            {
+              "name": "PwPersonalCard",
+              "label": "Personal Card",
+              "description": "Your name and four app shortcuts",
+              "minWidth": "250dp"
