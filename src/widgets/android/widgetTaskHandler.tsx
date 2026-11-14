@@ -1,29 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 import { launchApp } from '../../native/InstalledApps';
-import { HelloWidget } from './HelloWidget';
 import { QuickLaunchWidget, WidgetApp } from './QuickLaunchWidget';
+import { PersonalCardWidget, WidgetCard } from './PersonalCardWidget';
 
-const TAPS_KEY = 'androidWidget.hello.taps';
 const QUICK_LAUNCH_KEY = 'quickLaunch.v1';
+const PERSONAL_CARD_KEY = 'personalCard.v1';
 
-function pad(n: number): string {
-  return n < 10 ? `0${n}` : `${n}`;
-}
-
-function timeNow(): string {
-  const d = new Date();
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-async function readTaps(): Promise<number> {
-  try {
-    const raw = await AsyncStorage.getItem(TAPS_KEY);
-    const n = raw === null ? 0 : parseInt(raw, 10);
-    return Number.isFinite(n) ? n : 0;
-  } catch {
-    return 0;
-  }
+function isApp(x: unknown): x is WidgetApp {
+  return (
+    x !== null &&
+    typeof x === 'object' &&
+    typeof (x as WidgetApp).packageName === 'string' &&
+    typeof (x as WidgetApp).icon === 'string'
+  );
 }
 
 async function readQuickLaunch(): Promise<WidgetApp[]> {
@@ -31,16 +21,35 @@ async function readQuickLaunch(): Promise<WidgetApp[]> {
     const raw = await AsyncStorage.getItem(QUICK_LAUNCH_KEY);
     if (raw === null) return [];
     const list: unknown = JSON.parse(raw);
-    if (!Array.isArray(list)) return [];
-    return list.filter(
-      (x): x is WidgetApp =>
-        x !== null &&
-        typeof x === 'object' &&
-        typeof (x as WidgetApp).packageName === 'string' &&
-        typeof (x as WidgetApp).icon === 'string'
-    );
+    return Array.isArray(list) ? list.filter(isApp) : [];
   } catch {
     return [];
+  }
+}
+
+async function readPersonalCard(): Promise<WidgetCard> {
+  const fallback: WidgetCard = {
+    name: 'Your name',
+    tagline: 'Open the app to edit',
+    slots: [null, null, null, null],
+  };
+  try {
+    const raw = await AsyncStorage.getItem(PERSONAL_CARD_KEY);
+    if (raw === null) return fallback;
+    const data = JSON.parse(raw) as Partial<WidgetCard> | null;
+    if (data === null || typeof data !== 'object') return fallback;
+    const slots = [0, 1, 2, 3].map((i) => {
+      const s = Array.isArray(data.slots) ? data.slots[i] : null;
+      return isApp(s) ? s : null;
+    });
+    return {
+      name: typeof data.name === 'string' ? data.name : fallback.name,
+      tagline:
+        typeof data.tagline === 'string' ? data.tagline : fallback.tagline,
+      slots,
+    };
+  } catch {
+    return fallback;
   }
 }
 
@@ -68,59 +77,31 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
   try {
     const name = props.widgetInfo.widgetName;
 
-    if (name === 'PwHello') {
-      switch (props.widgetAction) {
-        case 'WIDGET_ADDED':
-        case 'WIDGET_UPDATE':
-        case 'WIDGET_RESIZED': {
-          const taps = await readTaps();
-          props.renderWidget(<HelloWidget taps={taps} updatedAt={timeNow()} />);
-          break;
+    if (props.widgetAction === 'WIDGET_CLICK') {
+      if (props.clickAction === 'LAUNCH_APP') {
+        const data = props.clickActionData as
+          | { packageName?: string }
+          | undefined;
+        if (data && typeof data.packageName === 'string') {
+          await launchApp(data.packageName);
         }
-        case 'WIDGET_CLICK': {
-          if (props.clickAction === 'TEST_TAP') {
-            const taps = (await readTaps()) + 1;
-            try {
-              await AsyncStorage.setItem(TAPS_KEY, String(taps));
-            } catch {
-              // Saving failed. The widget still shows the new number once.
-            }
-            props.renderWidget(
-              <HelloWidget taps={taps} updatedAt={timeNow()} />
-            );
-          }
-          break;
-        }
-        default:
-          break;
       }
       return;
     }
 
-    if (name === 'PwQuickLaunch') {
-      switch (props.widgetAction) {
-        case 'WIDGET_ADDED':
-        case 'WIDGET_UPDATE':
-        case 'WIDGET_RESIZED': {
-          const apps = await readQuickLaunch();
-          props.renderWidget(
-            <QuickLaunchWidget apps={apps} widthDp={widthInDp(props)} />
-          );
-          break;
-        }
-        case 'WIDGET_CLICK': {
-          if (props.clickAction === 'LAUNCH_APP') {
-            const data = props.clickActionData as
-              | { packageName?: string }
-              | undefined;
-            if (data && typeof data.packageName === 'string') {
-              await launchApp(data.packageName);
-            }
-          }
-          break;
-        }
-        default:
-          break;
+    if (
+      props.widgetAction === 'WIDGET_ADDED' ||
+      props.widgetAction === 'WIDGET_UPDATE' ||
+      props.widgetAction === 'WIDGET_RESIZED'
+    ) {
+      if (name === 'PwQuickLaunch') {
+        const apps = await readQuickLaunch();
+        props.renderWidget(
+          <QuickLaunchWidget apps={apps} widthDp={widthInDp(props)} />
+        );
+      } else if (name === 'PwPersonalCard') {
+        const card = await readPersonalCard();
+        props.renderWidget(<PersonalCardWidget card={card} />);
       }
     }
   } catch {
