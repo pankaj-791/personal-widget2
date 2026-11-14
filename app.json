@@ -28,4 +28,15 @@
               "name": "PwPersonalCard",
               "label": "Personal Card",
               "description": "Your name and four app shortcuts",
-              "minWidth": "250dp"
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ]
+    ]
+  }
+}
