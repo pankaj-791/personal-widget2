@@ -1,6 +1,9 @@
 {
   "platforms": ["android"],
   "android": {
-    "modules": ["expo.modules.installedapps.InstalledAppsModule"]
+    "modules": [
+      "expo.modules.installedapps.InstalledAppsModule",
+      "expo.modules.installedapps.ImageFilterModule"
+    ]
   }
 }
