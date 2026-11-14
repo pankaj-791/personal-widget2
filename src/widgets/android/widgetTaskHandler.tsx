@@ -3,9 +3,11 @@ import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 import { launchApp } from '../../native/InstalledApps';
 import { QuickLaunchWidget, WidgetApp } from './QuickLaunchWidget';
 import { PersonalCardWidget, WidgetCard } from './PersonalCardWidget';
+import { CalendarWidget } from './CalendarWidget';
 
 const QUICK_LAUNCH_KEY = 'quickLaunch.v1';
 const PERSONAL_CARD_KEY = 'personalCard.v1';
+const CALENDAR_OFFSET_PREFIX = 'androidWidget.calendar.offset.';
 
 function isApp(x: unknown): x is WidgetApp {
   return (
@@ -53,6 +55,27 @@ async function readPersonalCard(): Promise<WidgetCard> {
   }
 }
 
+async function readOffset(widgetId: number): Promise<number> {
+  try {
+    const raw = await AsyncStorage.getItem(`${CALENDAR_OFFSET_PREFIX}${widgetId}`);
+    const n = raw === null ? 0 : parseInt(raw, 10);
+    return Number.isFinite(n) ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function writeOffset(widgetId: number, offset: number): Promise<void> {
+  try {
+    await AsyncStorage.setItem(
+      `${CALENDAR_OFFSET_PREFIX}${widgetId}`,
+      String(offset)
+    );
+  } catch {
+    // Saving failed. The widget still shows the month once.
+  }
+}
+
 // The library reports the widget size. It may be in pixels or dp, so we
 // convert large numbers from pixels to dp.
 function widthInDp(props: WidgetTaskHandlerProps): number {
@@ -73,18 +96,46 @@ function widthInDp(props: WidgetTaskHandlerProps): number {
   }
 }
 
+function drawCalendar(props: WidgetTaskHandlerProps, offset: number) {
+  const base = new Date();
+  const shown = new Date(base.getFullYear(), base.getMonth() + offset, 1);
+  props.renderWidget(
+    <CalendarWidget
+      year={shown.getFullYear()}
+      month={shown.getMonth()}
+      today={offset === 0 ? base.getDate() : null}
+      widthDp={widthInDp(props)}
+    />
+  );
+}
+
 export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
   try {
     const name = props.widgetInfo.widgetName;
+    const widgetId = props.widgetInfo.widgetId;
 
     if (props.widgetAction === 'WIDGET_CLICK') {
-      if (props.clickAction === 'LAUNCH_APP') {
+      const action = props.clickAction;
+
+      if (action === 'LAUNCH_APP') {
         const data = props.clickActionData as
           | { packageName?: string }
           | undefined;
         if (data && typeof data.packageName === 'string') {
           await launchApp(data.packageName);
         }
+        return;
+      }
+
+      if (name === 'PwCalendar') {
+        let offset = await readOffset(widgetId);
+        if (action === 'CAL_PREV') offset -= 1;
+        else if (action === 'CAL_NEXT') offset += 1;
+        else if (action === 'CAL_TODAY') offset = 0;
+        else return;
+        offset = Math.max(-240, Math.min(240, offset));
+        await writeOffset(widgetId, offset);
+        drawCalendar(props, offset);
       }
       return;
     }
@@ -102,6 +153,17 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
       } else if (name === 'PwPersonalCard') {
         const card = await readPersonalCard();
         props.renderWidget(<PersonalCardWidget card={card} />);
+      } else if (name === 'PwCalendar') {
+        // A timed refresh returns to the current month. Adding or resizing
+        // keeps whichever month you were viewing.
+        const offset =
+          props.widgetAction === 'WIDGET_UPDATE'
+            ? 0
+            : await readOffset(widgetId);
+        if (props.widgetAction === 'WIDGET_UPDATE') {
+          await writeOffset(widgetId, 0);
+        }
+        drawCalendar(props, offset);
       }
     }
   } catch {
