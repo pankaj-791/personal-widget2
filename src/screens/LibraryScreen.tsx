@@ -6,7 +6,9 @@ import ClockWidget, {
   ClockStyle,
   WidgetSize,
   defaultClockConfig,
-} from '../widgets/ClockWidget';import GamesSection from '../games/GamesSection';
+} from '../widgets/ClockWidget';
+import GamesSection from '../games/GamesSection';
+import MyWidgetsSection from '../creator/MyWidgetsSection';
 import CalendarWidget, {
   CalendarConfig,
   defaultCalendarConfig,
@@ -106,6 +108,8 @@ export default function LibraryScreen() {
       contentContainerStyle={styles.content}
     >
       <Text style={[styles.title, { color: t.text }]}>Library</Text>
+            <MyWidgetsSection />
+      <View style={{ height: spacing.lg }} />
 
       <View
         style={[
